@@ -222,15 +222,20 @@ function clickedOnBoard(event) {
 		}
 	} else if(selectOrMove == 2) {
 		square2 = whichSquare(event.offsetX, event.offsetY);
+
 		if(square2[0] != square1[0] || square2[1] != square1[1]) {
 			isNewInMoves = selectedPiece.isNewInMoves(square2[0], square2[1]);
+
 			if(isNewInMoves != 0) {
 				capturedPiece = whichPieceAt(square2[0], square2[1]);
+
 				if(capturedPiece != 0) {
-					color2 = whichColorSquare(square2[0],square2[1]);
-					fillColor(square2[0],square2[1],color2);
+					response("piece was captured");
 					capturedPiece.alive = 0;
-					
+
+					color2 = whichColorSquare(square2[0], square2[1]);
+					fillColor(square2[0], square2[1],color2);
+
 					/*
 					//drawing captured piece outside the board
 					numberOfPiecesCaptured[(!playerTurn)]++;
@@ -238,33 +243,28 @@ function clickedOnBoard(event) {
 					ctx3.drawImage(p,capturedPiece.img.x,capturedPiece.img.y,imgUnit,imgUnit,capturedPiece.x,capturedPiece.y,unit,unit);
 					*/
 				}
-				ctx2.clearRect(0,0,canvas.width,canvas.height);
+				ctx2.clearRect(0, 0, canvas.width, canvas.height);
 
-				color1 = whichColorSquare(square1[0],square1[1]);
-				fillColor(square1[0],square1[1],color1);
+				color1 = whichColorSquare(square1[0], square1[1]);
+				fillColor(square1[0],square1[1], color1);
 
-				selectedPiece.update(square2[0],square2[1]);
+				selectedPiece.update(square2[0], square2[1]);
 				selectedPiece.draw();
 
-				//selectedPiece.selected=0;
 				selectOrMove = 1;
-				playerTurn = playerTurn?0:1;
+				playerTurn = playerTurn ? 0 : 1;
 
 				//removing red square of king
-				if(pieces[(!playerTurn)*16].inCheck >= 1){
-					let c = whichColorSquare(redSquare.x,redSquare.y);
-					fillColor(redSquare.x,redSquare.y,c);
-					if(redSquare.x == pieces[(!playerTurn)*16].x){
+				if(pieces[(!playerTurn)*16].inCheck >= 1) {
+					let c = whichColorSquare(redSquare.x, redSquare.y);
+					fillColor(redSquare.x, redSquare.y, c);
+
+					if(redSquare.x == pieces[(!playerTurn)*16].x) {
 						pieces[(!playerTurn)*16].draw();
 					}
 				}
 
-				//weHaveAWinner(1);
-				//console.log(piece[0].length);
-
-
-
-				//resetting
+				/*resetting some properties of all pieces*/
 				for(let i=0 ; i<pieces.length ; i++){
 					pieces[i].moves = [];
 					if(i == 0 || i == 16){
@@ -278,9 +278,6 @@ function clickedOnBoard(event) {
 					}
 				}
 
-
-
-				console.log(11111);
 				//find possible moves of all pieces
 				
 				pieces[(!playerTurn)*16].findMovesAfterMyTurn();
