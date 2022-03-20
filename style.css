@@ -1,0 +1,38 @@
+body{
+    margin:0;
+    overflow: hidden;
+    background-color: #207e40;
+}
+#canvas{
+    position:absolute;
+    z-index: 10;
+}
+#canvas2{
+    position: absolute;
+    z-index: 20;
+}/*
+#canvas3{
+    position: absolute;
+    z-index: 1;
+}*/
+
+/*
+img{
+    visibility: hidden;
+}
+*/
+
+/*
+took me long time to complete this codes, this game
+i was obsessed with chess, the queen's gambit, and coding
+hence this project
+no initial planning or designing was done at start
+it was a mess i felt in the middle
+there were lots of moments where i wanted to just stop working on this
+dark times
+thought i could never complete this
+but i finally did
+it felt really good. i felt relieved and proud of myself
+problems not in style file off course
+but in java script files
+*/
