@@ -322,12 +322,6 @@ function clickedOnBoard(event) {
 				}
 				
 				piece[playerTurn][0].findMovesBeforeMyTurn();
-
-				/*
-				for(let i=playerTurn*16 ; i<(16 + playerTurn*16) ; i++){
-					pieces2[i].movesEnemyKingIsLimit();
-				}
-				*/
 				
 				//if king in check, draw red color square
 				if(piece[playerTurn][0].inCheck >= 1){
