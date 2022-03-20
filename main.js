@@ -252,151 +252,91 @@ function clickedOnBoard(event) {
 				selectedPiece.draw();
 
 				selectOrMove = 1;
-				playerTurn = playerTurn ? 0 : 1;
+				//playerTurn = playerTurn ? 0 : 1;
 
-				//removing red square of king
-				if(pieces[(!playerTurn)*16].inCheck >= 1) {
+				/*if player king was in check then remove red square*/
+				if(piece[playerTurn][0].inCheck >= 1) {
 					let c = whichColorSquare(redSquare.x, redSquare.y);
 					fillColor(redSquare.x, redSquare.y, c);
 
-					if(redSquare.x == pieces[(!playerTurn)*16].x) {
-						pieces[(!playerTurn)*16].draw();
+					if(redSquare.x == piece[playerTurn][0].x) {
+						piece[playerTurn][0].draw();
 					}
 				}
 
 				/*resetting some properties of all pieces*/
-				for(let i=0 ; i<pieces.length ; i++){
-					pieces[i].moves = [];
-					if(i == 0 || i == 16){
-						pieces[i].inCheck = 0;
-						pieces[i].checkPath = [];
-					}
-					else{
-						pieces[i].isPinned = 0;
-						pieces[i].isProtected = 0;
-						pieces[i].pinnedPath = [];
-					}
-				}
-
-				//find possible moves of all pieces
-				
-				pieces[(!playerTurn)*16].findMovesAfterMyTurn();
-
-				for(let i=(!playerTurn)*16 + 1; i<(!playerTurn)*16 + 16 ; i++){
-					if(pieces[i].alive){
-						pieces[i].findMovesAfterMyTurn();
+				for(let i = 0 ; i < piece.length ; i++) {
+					for(let j = 0 ; j < piece[i].length ; j++) {
+						piece[i][j].moves = [];
+						if(j == 0) {
+							piece[i][j].inCheck = 0;
+							piece[i][j].checkPath = [];
+						} else {
+							piece[i][j].isPinned = 0;
+							piece[i][j].isProtected = 0;
+							piece[i][j].pinnedPath = [];
+						}
 					}
 				}
 
-				//playerTurn pieces moves
-				
+				/*find possible moves of all pieces*/
+				piece[playerTurn][0].findMovesAfterMyTurn();
+
+				for(let j = 1 ; j < piece[playerTurn].length ; i++) {
+					if(piece[playerTurn][j].alive) {
+						piece[playerTurn][j].findMovesAfterMyTurn();
+					}
+				}
+
+				//Now we change player turn, after previous things need to be done with same player turn
+				playerTurn = playerTurn ? 0 : 1;
+
 				let temp = [];
 				
-				for(let i=playerTurn*16 + 1 ; i<playerTurn*16 + 16 ; i++){
-					if(pieces[i].alive){
-						
-						if(pieces[i].isPinned == 0){
-							pieces[i].findMovesBeforeMyTurn();
-							//console.log(pieces[i].moves);
+				for(let jj = 1 ; jj < piece[playerTurn].length ; jj++) {
+					if(piece[playerTurn][jj].alive) {
+						if(piece[playerTurn][jj].isPinned == 0) {
+							piece[playerTurn][jj].findMovesBeforeMyTurn();
 						}
-						else if(pieces[i].isPinned == 1){
-							pieces[i].findMovesBeforeMyTurn();
+						else if(piece[playerTurn][jj].isPinned == 1){
+							piece[playerTurn][jj].findMovesBeforeMyTurn();
 							
-							temp = pieces[i].moves;
-							//console.log(temp);
-							pieces[i].moves = [];
+							temp = piece[playerTurn][jj].moves;
+							piece[playerTurn][jj].moves = [];
 
-							for(let j=0 ; j<temp.length ; j++){
-								for(let k=0 ; k<pieces[i].pinnedPath.length ; k++){
-									if(temp[j].x == pieces[i].pinnedPath[k].x){
-										if(temp[j].y == pieces[i].pinnedPath[k].y){
-											pieces[i].moves.push({x:temp[j].x,y:temp[j].y});
+							for(let j = 0 ; j < temp.length ; j++) {
+								for(let k = 0 ; k < piece[playerTurn][jj].pinnedPath.length ; k++) {
+									if(temp[j].x == piece[playerTurn][jj].pinnedPath[k].x) {
+										if(temp[j].y == piece[playerTurn][jj].pinnedPath[k].y) {
+											piece[playerTurn][jj].moves.push({x : temp[j].x, y : temp[j].y});
 										}
 									}
 								}
 								//console.log(pieces[i].moves);
 							}
 							temp = [];
-						}
-						else{
-							pieces[i].moves = [];
+						} else {
+							piece[playerTurn][jj].moves = [];
 						}
 					}
 				}
 				
-				pieces[playerTurn*16].findMovesBeforeMyTurn();
-				
-				/*
-				if(pieces[playerTurn*16].inCheck == 1){
-					for(let i=playerTurn*16 + 1 ; i<playerTurn*16 + 16 ; i++){
-						pieces[i].myKingInCheck();
-					}
-				}
-				else if(pieces[playerTurn*16].inCheck == 0){
-					for(let i=playerTurn*16 + 1 ; i<playerTurn*16 + 16 ; i++){
-						pieces[i].beforeMyTurn();
-					}
-				}
-				else{
-				}
-				*/
-
-				//find possible move of king
-				//pieces2[playerTurn*16].movesBoardIsLimit();
-				//pieces2[playerTurn*16].movesFriendIsLimit();
-				//pieces2[playerTurn*16].movesEnemyIsLimit();
-
-
+				piece[playerTurn][0].findMovesBeforeMyTurn();
 
 				/*
-				//final possible moves of the pieces
-				//after board limit, same piece in way, opposite in way, pinned by enemy piece
-				for(let i=(!playerTurn)*16 ; i<(16 + (!playerTurn)*16); i++){
-					pieces2[i].isprotected = 0;
-					for(let j=(!playerTurn)*16 ; j<(16 + (!playerTurn)*16) ; j++){
-						if(j != i){
-							for(let k=0 ; k<pieces2[j].moves.length ; k++){
-								if(pieces2[i].x == pieces2[j].moves[k].x){
-									if(pieces2[i].y == pieces2[j].moves[k].y){
-										pieces2[i].isprotected = 1;
-									}
-								}
-							}
-						}
-					}
-				}
-
-				pieces2[playerTurn*16].movesBoardIsLimit();
-				pieces2[playerTurn*16].movesFriendIsLimit();
-				pieces2[playerTurn*16].movesEnemyIsLimit();
-				//pieces2[playerTurn*16].analyze();
-
-				//pieces2[playerTurn*16]
-
 				for(let i=playerTurn*16 ; i<(16 + playerTurn*16) ; i++){
 					pieces2[i].movesEnemyKingIsLimit();
 				}
-
-				/*
-				for(let i=(!playerTurn)*16 ; i<(16 + (!playerTurn)*16) ; i++){
-					for(let j=0 ; j<pieces2[i].moves.length ; j++){
-						if(pieces2[playerTurn*16].x == pieces2[j].moves[j].x){
-							if(pieces2[playerTurn*16].y == pieces2[j].moves[j].y){
-								pieces2[playerTurn*16].isInCheckByHowMany++;
-							}
-						}
-					}
-				}
 				*/
 				
-				//if king in check, draw red color
-				if(pieces[playerTurn*16].inCheck >= 1){
+				//if king in check, draw red color square
+				if(piece[playerTurn][0].inCheck >= 1){
 					redSquare = {
-						x:pieces[playerTurn*16].x,
-						y:pieces[playerTurn*16].y,
+						x:piece[playerTurn][0].x,
+						y:piece[playerTurn][0].y,
 					};
-					fillColor(pieces[playerTurn*16].x,pieces[playerTurn*16].y,redColor);
-					pieces[playerTurn*16].draw();
+					fillColor(piece[playerTurn][0].x, piece[playerTurn][0].y, redColor);
+					piece[playerTurn][0].draw();
 					
 					/*
 					there is no need for this. any move near king in checkpath is in onFire moves
@@ -418,9 +358,6 @@ function clickedOnBoard(event) {
 					}
 					*/
 				}
-
-				console.log(22222);
-				
 
 				//finding total possible moves by comparing pieces move with chech path of king
 				//let temp = []; already declared up
