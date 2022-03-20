@@ -21,6 +21,8 @@ let ctx2 = canvas2.getContext("2d");
 //let canvas3 = document.getElementById("canvas3");
 //let ctx3 = canvas3.getContext("2d");
 
+let messageDIV = document.getElementById("message");
+
 //board color
 const lightColor="#cccccc";
 const darkColor="#333333";
@@ -200,113 +202,31 @@ let numberOfPiecesCaptured = [0,0];
 
 canvas2.addEventListener("click",clickedOnBoard);
 
-/*
-//function is in style of guard clauses, return, break, continue
-function clicked(event){
-	if(selectOrMove == 0){
-		square1 = whichSquare(event.offsetX,event.offsetY);
-		//x and clientX would not work here after board was placed in center
-
-		selectedPiece = whichPieceAt(square1[0],square1[1]);
-		//console.log(selectedPiece);
-		if(selectedPiece == 0){
-			return;
-		}
-		
-		selectedPiece.findPossibleMoves();
-		if(selectedPiece.moves.length == 0){
-			return;
-		}
-		
-		selectedPiece.selected = 1;
-		selectedPiece.drawPossibleMoves();
-		selectOrMove = 1;
-		//console.log(foundBox1[0],foundBox1[1]);
-		//console.log(selected.selected);
-	}
-	else{
-		square2 = whichSquare(event.offsetX,event.offsetY);
-
-		//if piece was deselected
-		if(square2[0]==square1[0] && square2[1] == square1[1]){
-			selectedPiece.selected = 0;
-			ctx2.clearRect(0,0,canvas.width,canvas.height);
-			//console.log(1);
-			selectOrMove = 0;
-			return;
-		}
-
-		//if not in piece's nature to move there then again select some other proper square for the same piece
-		isNewPossible = selectedPiece.isNewPossible(square2[0],square2[1]);
-		if(isNewPossible == 0){
-			//console.log(12);
-			return;
-		}
-
-		capturedPiece = whichPieceAt(square2[0],square2[1]);
-		if(capturedPiece && capturedPiece.color == selectedPiece.color){
-			//alert("that's your family!");
-			//console.log("capturedPiece : " + capturedPiece);
-			//console.log(15);
-			return;
-		}
-		if(capturedPiece){
-			capturedPiece.alive = 0;
-			//console.log(11);
-
-			color2 = whichColorSquare(square2[0],square2[1]);
-			fillColor(square2[0],square2[1],color2);
-		}
-
-		//console.log(10);
-		color1 = whichColorSquare(square1[0],square1[1]);
-		fillColor(square1[0],square1[1],color1);
-
-		selectedPiece.update(square2[0],square2[1]);
-		selectedPiece.draw();
-
-		ctx2.clearRect(0,0,canvas.width,canvas.height);
-		//console.log(2);
-		selectedPiece.selected=0;
-		selectOrMove = 0;
-	}
-}
-*/
-
-//function is in style of if, else if, else statements
 function clickedOnBoard(event) {
-	//console.log(selectOrMove);
-	if(selectOrMove == 1){
-		
-		//selectAPiece(event.offsetX,event.offsetY);
-		square1 = whichSquare(event.offsetX,event.offsetY);
-		selectedPiece = whichPieceAt(square1[0],square1[1]);
+	if(selectOrMove == 1) {
+		square1 = whichSquare(event.offsetX, event.offsetY);
+		selectedPiece = whichPieceAt(square1[0], square1[1]);
 		if(selectedPiece != 0){
-			
 			if(selectedPiece.color == playerTurn){
-//    			if(selectedPiece.alive == 1){
-//	    			selectedPiece.findPossibleMoves();
-					if(selectedPiece.moves.length != 0){
-						
-						selectedPiece.drawPossibleMoves();
-						//selectedPiece.selected = 1;
-						selectOrMove = 2;
-					}
-//				}
+				if(selectedPiece.moves.length != 0){
+					selectedPiece.drawPossibleMoves();
+					selectOrMove = 2;
+				} else {
+					response("selected piece has no possible moves");
+				}
+			} else {
+				response("select one of your own pieces");
 			}
+		} else {
+			response("you selected an empty square");
 		}
-	}
-	else if(selectOrMove == 2){
-		
-		square2 = whichSquare(event.offsetX,event.offsetY);
+	} else if(selectOrMove == 2) {
+		square2 = whichSquare(event.offsetX, event.offsetY);
 		if(square2[0] != square1[0] || square2[1] != square1[1]) {
-			
-			isNewInMoves = selectedPiece.isNewInMoves(square2[0],square2[1]);
+			isNewInMoves = selectedPiece.isNewInMoves(square2[0], square2[1]);
 			if(isNewInMoves != 0) {
-				
-				capturedPiece = whichPieceAt(square2[0],square2[1]);
+				capturedPiece = whichPieceAt(square2[0], square2[1]);
 				if(capturedPiece != 0) {
-					
 					color2 = whichColorSquare(square2[0],square2[1]);
 					fillColor(square2[0],square2[1],color2);
 					capturedPiece.alive = 0;
@@ -452,9 +372,9 @@ function clickedOnBoard(event) {
 				pieces2[playerTurn*16].movesBoardIsLimit();
 				pieces2[playerTurn*16].movesFriendIsLimit();
 				pieces2[playerTurn*16].movesEnemyIsLimit();
-//                pieces2[playerTurn*16].analyze();
+				//pieces2[playerTurn*16].analyze();
 
-//                pieces2[playerTurn*16]
+				//pieces2[playerTurn*16]
 
 				for(let i=playerTurn*16 ; i<(16 + playerTurn*16) ; i++){
 					pieces2[i].movesEnemyKingIsLimit();
@@ -593,11 +513,12 @@ function clickedOnBoard(event) {
 					br2.isEnemyKingInPath();
 				}
 				*/
+			} else {
+				response("you tapped a square that is not in selected piece's moves");
 			}
-		}
-		else{
-			ctx2.clearRect(0,0,canvas.width,canvas.height);
-			selectedPiece.selected = 0;
+		} else {
+			response("you deselected your selected piece");
+			ctx2.clearRect(0, 0, canvas.width, canvas.height);
 			selectOrMove = 1;
 		}
 	}
@@ -687,7 +608,9 @@ function fillColor(x,y,color){
 	ctx.lineWidth=unit;
 	ctx.stroke();
 }
-
+function response(message) {
+	messageDIV.innerHTML += "<div>" + message + "</div>";
+}
 function weHaveAWinner(player){
 	let color = player ? "White" : "Black";
 	ctx2.textAlign = "center";
@@ -696,225 +619,3 @@ function weHaveAWinner(player){
 	ctx2.fillText(color + " Wins!",unit*4,unit*4);
 
 }
-
-/*
-function selectAPiece(x,y){
-	square1 = whichSquare(x,y);
-	selectedPiece = whichPieceAt(square1[0],square1[1]);
-	
-	if(selectedPiece != 0){
-		if(selectedPiece.color == playerTurn){
-			if(selectedPiece.moves.length != 0){
-				selectedPiece.drawPossibleMoves();
-				selectOrMove = 2;
-			}
-		}
-	}
-}
-*/
-
-
-
-	/*
-	if(wk.alive && wk.x == x && wk.y == y){
-		wk.alive = 0;
-		return 1;
-	}
-	else if(bk.alive && bk.x == x && bk.y == y){
-		bk.alive = 0;
-		return 1;
-	}
-	//queens
-	else if(wq.alive && wq.x == x && wq.y == y){
-		wq.alive = 0;
-		return 1;
-	}
-	else if(bq.alive && bq.x == x && bq.y == y){
-		bq.alive = 0;
-		return 1;
-	}
-	//rooks
-	else if(wr1.alive && wr1.x == x && wr1.y == y){
-		wr1.alive=0;
-		return 1;
-	}
-	else if(wr2.alive && wr2.x == x && wr2.y == y){
-		wr2.alive = 0;
-		return 1;
-	}
-	else if(br1.alive && br1.x == x && br1.y == y){
-		br1.alive = 0;
-		return 1;
-	}
-	else if(br2.alive && br2.x == x && br2.y == y){
-		br2.alive = 0;
-		return 1;
-	}
-	//bishops
-	else if(wb1.alive && wb1.x == x && wb1.y == y){
-		wb1.alive = 0;
-		return 1;
-	}
-	else if(wb2.alive && wb2.x == x && wb2.y == y){
-		wb2.alive = 0;
-		return 1;
-	}
-	else if(bb1.alive && bb1.x == x && bb1.y == y){
-		bb1.alive = 0;
-		return 1;
-	}
-	else if(bb2.alive && bb2.x == x && bb2.y == y){
-		bb2.alive = 0;
-		return 1;
-	}
-	//knights
-	else if(wn1.alive && wn1.x == x && wn1.y == y){
-		wn1.alive = 0;
-		return 1;
-	}
-	else if(wn2.alive && wn2.x == x && wn2.y == y){
-		wn2.alive = 0;
-		return 1;
-	}
-	else if(bn1.alive && bn1.x == x && bn1.y == y){
-		bn1.alive = 0;
-		return 1;
-	}
-	else if(bn2.alive && bn2.x == x && bn2.y == y){
-		bn2.alive = 0;
-		return 1;
-	}
-	//pawns
-//you can use while loop here, saves time. no you can't actually. what in the blue heck are you going to put the condition in the while loop
-	wp.forEach(pawny => {
-		if(pawny.alive && pawny.x == x && pawny.y == y){
-			pawny.alive = 0;
-			return 1;
-		}
-	});
-	
-	bp.forEach(pawny => {
-		if(pawny.alive && pawny.x == x && pawny.y == y){
-			pawny.alive = 0;
-			return 1;
-		}
-	});
-
-
-	for(i=0;i<8;i++){
-		if(wp[i].alive && wp[i].x == x && wp[i].y == y){
-			wp[i].alive = 0;
-			return 1;
-		}
-	}
-	for(i=0;i<8;i++){
-		if(bp[i].alive && bp[i].x == x && bp[i].y == y){
-			bp[i].alive = 0;
-			return 1;
-		}
-	}
-
-	return 0;
-*/
-
-/*
-//kings
-	if(wk.alive && wk.x == x && wk.y == y){
-		wk.selected = 1;
-		selected=wk;
-	}
-	else if(bk.alive && bk.x == x && bk.y == y){
-		bk.selected = 1;
-		selected=bk;
-	}
-	//queens
-	else if(wq.alive && wq.x == x && wq.y == y){
-		wq.selected = 1;
-		selected=wq;
-	}
-	else if(bq.alive && bq.x == x && bq.y == y){
-		bq.selected = 1;
-		selected=bq;
-	}
-	//rooks
-	else if(wr1.alive && wr1.x == x && wr1.y == y){
-		wr1.selected = 1;
-		selected=wr1;
-	}
-	else if(wr2.alive && wr2.x == x && wr2.y == y){
-		wr2.selected = 1;
-		selected=wr2;
-	}
-	else if(br1.alive && br1.x == x && br1.y == y){
-		br1.selected = 1;
-		selected=br1;
-	}
-	else if(br2.alive && br2.x == x && br2.y == y){
-		br2.selected = 1;
-		selected=br2;
-	}
-	//bishops
-	else if(wb1.alive && wb1.x == x && wb1.y == y){
-		wb1.selected = 1;
-		selected=wb1;
-	}
-	else if(wb2.alive && wb2.x == x && wb2.y == y){
-		wb2.selected = 1;
-		selected=wb2;
-	}
-	else if(bb1.alive && bb1.x == x && bb1.y == y){
-		bb1.selected = 1;
-		selected=bb1;
-	}
-	else if(bb2.alive && bb2.x == x && bb2.y == y){
-		bb2.selected = 1;
-		selected=bb2;
-	}
-	//knights
-	else if(wn1.alive && wn1.x == x && wn1.y == y){
-		wn1.selected = 1;
-		selected=wn1;
-	}
-	else if(wn2.alive && wn2.x == x && wn2.y == y){
-		wn2.selected = 1;
-		selected=wn2;
-	}
-	else if(bn1.alive && bn1.x == x && bn1.y == y){
-		bn1.selected = 1;
-		selected=bn1;
-	}
-	else if(bn2.alive && bn2.x == x && bn2.y == y){
-		bn2.selected = 1;
-		selected=bn2;
-	}
-	//pawns
-	wp.forEach(pawny => {
-		if(pawny.alive && pawny.x == x && pawny.y == y){
-			pawny.selected = 1;
-			selected = pawny;
-		}
-	});
-	
-	bp.forEach(pawny => {
-		if(pawny.alive && pawny.x == x && pawny.y == y){
-			pawny.selected = 1;
-			selected = pawny;
-		}
-	});
-
-	//second way of checking pawns. it returns as soon as a match is there
-	for(i=0;i<8;i++){
-		if(wp[i].alive && wp[i].x == x && wp[i].y == y){
-			wp[i].selected = 1;
-			selected = wp[i];
-			return;
-		}
-	}
-	for(i=0;i<8;i++){
-		if(bp[i].alive && bp[i].x == x && bp[i].y == y){
-			bp[i].alive = 0;
-			selected = bp[i];
-			return;
-		}
-	}
-*/

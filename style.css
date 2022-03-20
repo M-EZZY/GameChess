@@ -15,7 +15,36 @@ body{
     position: absolute;
     z-index: 1;
 }*/
+#message {
+	position: absolute;
+	top: 0vh;
+	right: 0vw;
+	z-index: 10;
 
+	width: 10vw;
+	height: 100vh;
+
+	margin: 0;
+	padding: 0;
+
+	overflow-x: hidden;
+
+	background-color: black;
+}
+#message div {
+	position: relative;
+	top: 0vh;
+	right: 0vw;
+	z-index: 10;
+
+	width: 10vw;
+	height: fit-content;
+
+	overflow: hidden;
+
+	background-color: teal;
+	font-size: 1vw;
+}
 /*
 img{
     visibility: hidden;
