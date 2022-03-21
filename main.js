@@ -128,6 +128,8 @@ piece = [
 	[wk,wq,wr1,wr2,wb1,wb2,wn1,wn2,wp[0],wp[1],wp[2],wp[3],wp[4],wp[5],wp[6],wp[7]],
 ];
 
+//array to hold dead pieces so i don't have to constantly check if a piece is alive or not in piece array
+let pieceOut = [[]];
 
 
 //initializing
@@ -204,22 +206,7 @@ canvas2.addEventListener("click",clickedOnBoard);
 
 function clickedOnBoard(event) {
 	if(selectOrMove == 1) {
-		square1 = whichSquare(event.offsetX, event.offsetY);
-		selectedPiece = whichPieceAt(square1[0], square1[1]);
-		if(selectedPiece != 0){
-			if(selectedPiece.color == playerTurn){
-				if(selectedPiece.moves.length != 0){
-					selectedPiece.drawPossibleMoves();
-					selectOrMove = 2;
-				} else {
-					response("selected piece has no possible moves");
-				}
-			} else {
-				response("select one of your own pieces");
-			}
-		} else {
-			response("you selected an empty square");
-		}
+		selectingPiece(event.offsetX, event.offsetY);
 	} else if(selectOrMove == 2) {
 		square2 = whichSquare(event.offsetX, event.offsetY);
 
@@ -227,107 +214,51 @@ function clickedOnBoard(event) {
 			isNewInMoves = selectedPiece.isNewInMoves(square2[0], square2[1]);
 
 			if(isNewInMoves != 0) {
-				capturedPiece = whichPieceAt(square2[0], square2[1]);
+				movingSelectedPiece();
 
-				if(capturedPiece != 0) {
-					response("piece was captured");
-					capturedPiece.alive = 0;
+				resettingPreviousThings();
 
-					color2 = whichColorSquare(square2[0], square2[1]);
-					fillColor(square2[0], square2[1],color2);
-
-					/*
-					//drawing captured piece outside the board
-					numberOfPiecesCaptured[(!playerTurn)]++;
-					capturedPiece.update((!playerTurn)*unit*12,numberOfPiecesCaptured[(!playerTurn)]*unit);
-					ctx3.drawImage(p,capturedPiece.img.x,capturedPiece.img.y,imgUnit,imgUnit,capturedPiece.x,capturedPiece.y,unit,unit);
-					*/
-				}
-				ctx2.clearRect(0, 0, canvas.width, canvas.height);
-
-				color1 = whichColorSquare(square1[0], square1[1]);
-				fillColor(square1[0],square1[1], color1);
-
-				selectedPiece.update(square2[0], square2[1]);
-				selectedPiece.draw();
-
-				selectOrMove = 1;
-				//playerTurn = playerTurn ? 0 : 1;
-
-				/*if player king was in check then remove red square*/
-				if(piece[playerTurn][0].inCheck >= 1) {
-					let c = whichColorSquare(redSquare.x, redSquare.y);
-					fillColor(redSquare.x, redSquare.y, c);
-
-					if(redSquare.x == piece[playerTurn][0].x) {
-						piece[playerTurn][0].draw();
-					}
-				}
-
-				/*resetting some properties of all pieces*/
-				for(let i = 0 ; i < piece.length ; i++) {
-					for(let j = 0 ; j < piece[i].length ; j++) {
-						piece[i][j].moves = [];
-						if(j == 0) {
-							piece[i][j].inCheck = 0;
-							piece[i][j].checkPath = [];
-						} else {
-							piece[i][j].isPinned = 0;
-							piece[i][j].isProtected = 0;
-							piece[i][j].pinnedPath = [];
-						}
-					}
-				}
-
-				/*find possible moves of all pieces*/
-				piece[playerTurn][0].findMovesAfterMyTurn();
-
-				for(let j = 1 ; j < piece[playerTurn].length ; i++) {
-					if(piece[playerTurn][j].alive) {
-						piece[playerTurn][j].findMovesAfterMyTurn();
-					}
-				}
+				analyzingAfterMyTurn();
 
 				//Now we change player turn, after previous things need to be done with same player turn
 				playerTurn = playerTurn ? 0 : 1;
 
+				//this pinned path whole thing should be done in their respective methods, in findMovesBeforeMyTurn()
 				let temp = [];
 				
 				for(let jj = 1 ; jj < piece[playerTurn].length ; jj++) {
 					if(piece[playerTurn][jj].alive) {
-						if(piece[playerTurn][jj].isPinned == 0) {
+						if(piece[playerTurn][jj].isPinned <= 1) {
 							piece[playerTurn][jj].findMovesBeforeMyTurn();
-						}
-						else if(piece[playerTurn][jj].isPinned == 1){
-							piece[playerTurn][jj].findMovesBeforeMyTurn();
-							
-							temp = piece[playerTurn][jj].moves;
-							piece[playerTurn][jj].moves = [];
+						
+							if(piece[playerTurn][jj].isPinned == 1){
+								temp = piece[playerTurn][jj].moves;
+								piece[playerTurn][jj].moves = [];
 
-							for(let j = 0 ; j < temp.length ; j++) {
-								for(let k = 0 ; k < piece[playerTurn][jj].pinnedPath.length ; k++) {
-									if(temp[j].x == piece[playerTurn][jj].pinnedPath[k].x) {
-										if(temp[j].y == piece[playerTurn][jj].pinnedPath[k].y) {
-											piece[playerTurn][jj].moves.push({x : temp[j].x, y : temp[j].y});
+								for(let j = 0 ; j < temp.length ; j++) {
+									for(let k = 0 ; k < piece[playerTurn][jj].pinnedPath.length ; k++) {
+										if(temp[j].x == piece[playerTurn][jj].pinnedPath[k].x) {
+											if(temp[j].y == piece[playerTurn][jj].pinnedPath[k].y) {
+												piece[playerTurn][jj].moves.push({x : temp[j].x, y : temp[j].y});
+											}
 										}
 									}
 								}
-								//console.log(pieces[i].moves);
+								temp = [];
 							}
-							temp = [];
 						} else {
 							piece[playerTurn][jj].moves = [];
 						}
 					}
 				}
-				
+
 				piece[playerTurn][0].findMovesBeforeMyTurn();
 				
 				//if king in check, draw red color square
 				if(piece[playerTurn][0].inCheck >= 1){
 					redSquare = {
-						x:piece[playerTurn][0].x,
-						y:piece[playerTurn][0].y,
+						x : piece[playerTurn][0].x,
+						y : piece[playerTurn][0].y,
 					};
 					fillColor(piece[playerTurn][0].x, piece[playerTurn][0].y, redColor);
 					piece[playerTurn][0].draw();
@@ -353,12 +284,14 @@ function clickedOnBoard(event) {
 					*/
 				}
 
+				/*first check for check path then pinned path
+				also these needs to be done in findMovesBeforeMyTurn()*/
+
 				//finding total possible moves by comparing pieces move with chech path of king
 				//let temp = []; already declared up
 				let totalPossibleMoves = 0;
 
-				if(pieces[playerTurn*16].inCheck == 1){
-					//console.log(pieces[playerTurn*16].inCheck);
+				if(piece[playerTurn][0].inCheck == 1){
 					totalPossibleMoves = 0;
 
 					for(let i = playerTurn*16 + 1; i<playerTurn*16 + 16 ; i++){
@@ -369,9 +302,9 @@ function clickedOnBoard(event) {
 
 							for(let j=0 ; j<temp.length ; j++){
 								for(let k=0 ; k<pieces[playerTurn*16].checkPath.length ; k++){
-									
-									if(temp[j].x == pieces[playerTurn*16].checkPath[k].x){
-										if(temp[j].y == pieces[playerTurn*16].checkPath[k].y){
+
+									if(temp[j].x == piece[playerTurn][0].checkPath[k].x){
+										if(temp[j].y == piece[playerTurn][0].checkPath[k].y){
 											pieces[i].moves.push({x:temp[j].x,y:temp[j].y});
 											totalPossibleMoves++;
 										}
@@ -380,46 +313,21 @@ function clickedOnBoard(event) {
 							}
 							temp = [];
 						}
-						//console.log(pieces[i].moves);
 					}
 					if(totalPossibleMoves + pieces[playerTurn*16].moves.length == 0){
 						weHaveAWinner(!playerTurn);
 						return;
 					}
 				}
-				else if(pieces[playerTurn*16].inCheck > 1){
-					for(let i = playerTurn*16 + 1; i<playerTurn*16 + 16 ; i++){
+				else if(piece[playerTurn][0].inCheck > 1) {
+					for(let i = playerTurn*16 + 1; i<playerTurn*16 + 16 ; i++) {
 						pieces[i].moves = [];
 					}
-					if(pieces[playerTurn*16].moves.length == 0){
+					if(pieces[playerTurn*16].moves.length == 0) {
 						weHaveAWinner(!playerTurn);
 						return;
 					}
 				}
-
-				/*
-				bk.immediateNeighboursAre = [];
-
-				//check every enemy piece if its pinned
-				if(playerTurn == 0){
-					if(wr1.alive == 1){
-						if(bk.x == wr1.x){
-							if(bk.y > wr1.y){
-								if(wr1.y == bk.y-unit){
-									bk.isInCheck = 1;
-									bk.isInCheckByHowMany = 1;
-									bk.immediateNeighboursAre.push(wr1);
-								}
-								else{
-									
-								}
-							}
-						}
-
-					}
-				}
-				*/
-
 				//is king in check
 				//can it get out of check?
 				//capture attacking piece
@@ -428,30 +336,103 @@ function clickedOnBoard(event) {
 				//analyze possible moves of other pieces
 				//if no moves then game over
 				//results here will determine the possible moves of pieces
-
-				/*
-				//checking enemy king is in check or not
-				pieces[playerTurn].checkPath = [];
-				if(playerTurn == 0){
-					wr1.isEnemyKingInPath();
-					wr2.isEnemyKingInPath();
-				}
-				else{
-					br1.isEnemyKingInPath();
-					br2.isEnemyKingInPath();
-				}
-				*/
 			} else {
-				response("you tapped a square that is not in selected piece's moves");
+				log("you tapped a square that is not in selected piece's moves");
 			}
 		} else {
-			response("you deselected your selected piece");
+			log("you deselected your selected piece");
 			ctx2.clearRect(0, 0, canvas.width, canvas.height);
 			selectOrMove = 1;
 		}
 	}
 }
+function selectingPiece(ex, ey) {
+	square1 = whichSquare(ex, ey);
+	let x = square1[0];
+	let y = square1[1];
+	
+	selectedPiece = whichPieceAt(x, y);
+	if(selectedPiece != 0) {
+		if(selectedPiece.color == playerTurn) {
+			if(selectedPiece.moves.length != 0) {
+				selectedPiece.drawPossibleMoves();
+				selectOrMove = 2;
+			} else {
+				log("selected piece has no possible moves");
+			}
+		} else {
+			log("select one of your own pieces");
+		}
+	} else {
+		log("you selected an empty square");
+	}
+}
+function movingSelectedPiece() {
+	capturedPiece = whichPieceAt(square2[0], square2[1]);
 
+	if(capturedPiece != 0) {
+		log("piece was captured");
+		capturedPiece.alive = 0;
+
+		color2 = whichColorSquare(square2[0], square2[1]);
+		fillColor(square2[0], square2[1],color2);
+
+		/*
+		//drawing captured piece outside the board
+		numberOfPiecesCaptured[(!playerTurn)]++;
+		capturedPiece.update((!playerTurn)*unit*12,numberOfPiecesCaptured[(!playerTurn)]*unit);
+		ctx3.drawImage(p,capturedPiece.img.x,capturedPiece.img.y,imgUnit,imgUnit,capturedPiece.x,capturedPiece.y,unit,unit);
+		*/
+	}
+	ctx2.clearRect(0, 0, canvas.width, canvas.height);
+
+	color1 = whichColorSquare(square1[0], square1[1]);
+	fillColor(square1[0],square1[1], color1);
+
+	selectedPiece.update(square2[0], square2[1]);
+	selectedPiece.draw();
+
+	selectOrMove = 1;
+}
+function resettingPreviousThings() {
+	/*if player king was in check then remove red square*/
+	if(piece[playerTurn][0].inCheck >= 1) {
+		let c = whichColorSquare(redSquare.x, redSquare.y);
+		fillColor(redSquare.x, redSquare.y, c);
+
+		if(redSquare.x == piece[playerTurn][0].x) {
+			piece[playerTurn][0].draw();
+		}
+	}
+	/*resetting some properties of all pieces*/
+	for(let i = 0 ; i < piece.length ; i++) {
+		for(let j = 0 ; j < piece[i].length ; j++) {
+			piece[i][j].moves = [];
+			if(j == 0) {
+				piece[i][j].inCheck = 0;
+				piece[i][j].checkPath = [];
+			} else {
+				piece[i][j].isPinned = 0;
+				piece[i][j].isProtected = 0;
+				piece[i][j].pinnedPath = [];
+			}
+		}
+	}
+}
+function analyzingAfterMyTurn() {
+	/*this does many things, player whose turn just ended will check it's every piece path
+	set isProtected property of friends
+	check if enemy king is put in check, set check path
+	check if enemy piece is pinned, set their pinned path
+00	*/
+	piece[playerTurn][0].findMovesAfterMyTurn();
+
+	for(let j = 1 ; j < piece[playerTurn].length ; i++) {
+		if(piece[playerTurn][j].alive) {
+			piece[playerTurn][j].findMovesAfterMyTurn();
+		}
+	}
+}
 function whichSquare(x,y){
 	let fx,fy;
 	for(let j = 0 ; j <= 8 ; j++) {
@@ -465,7 +446,6 @@ function whichSquare(x,y){
 //	console.log(fx,fy);
 	return [fx, fy];
 }
-
 function whichColorSquare(x,y) {
 	let thei,thej;
 
@@ -491,7 +471,6 @@ function whichColorSquare(x,y) {
 		}
 	}
 }
-
 function whichPieceAt(x,y) {
 	for(let i=0 ; i<pieces.length ; i++){
 		if(pieces[i].alive){
@@ -520,14 +499,12 @@ function whichPieceAt(x,y) {
 	*/
 	return 0;
 }
-
 function checkBorderReached(x,y){
 	if(x < 0 || x > unit*7 || y < 0 || y > unit*7){
 		return 1;
 	}
 	return 0;
 }
-
 function fillColor(x,y,color){
 	ctx.strokeStyle=color;
 	ctx.beginPath();
@@ -536,8 +513,9 @@ function fillColor(x,y,color){
 	ctx.lineWidth=unit;
 	ctx.stroke();
 }
-function response(message) {
-	messageDIV.innerHTML += "<div>" + message + "</div>";
+function log(message) {
+	//messageDIV.innerHTML += "<div>" + message + "</div>";
+	console.log(message);
 }
 function weHaveAWinner(player){
 	let color = player ? "White" : "Black";
