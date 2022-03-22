@@ -213,44 +213,24 @@ function clickedOnBoard(event) {
 		if(square2[0] != square1[0] || square2[1] != square1[1]) {
 			isNewInMoves = selectedPiece.isNewInMoves(square2[0], square2[1]);
 
+			log("20");
 			if(isNewInMoves != 0) {
 				movingSelectedPiece();
-
+				log("30");
 				resettingPreviousThings();
-
+				log("31");
 				analyzingAfterMyTurn();
-
+				log("32");
 				//Now we change player turn, after previous things need to be done with same player turn
 				playerTurn = playerTurn ? 0 : 1;
 
-				//this pinned path whole thing should be done in their respective methods, in findMovesBeforeMyTurn()
-				let temp = [];
-				
-				for(let jj = 1 ; jj < piece[playerTurn].length ; jj++) {
-					if(piece[playerTurn][jj].alive) {
-						if(piece[playerTurn][jj].isPinned <= 1) {
-							piece[playerTurn][jj].findMovesBeforeMyTurn();
-						
-							if(piece[playerTurn][jj].isPinned == 1){
-								temp = piece[playerTurn][jj].moves;
-								piece[playerTurn][jj].moves = [];
-
-								for(let j = 0 ; j < temp.length ; j++) {
-									for(let k = 0 ; k < piece[playerTurn][jj].pinnedPath.length ; k++) {
-										if(temp[j].x == piece[playerTurn][jj].pinnedPath[k].x) {
-											if(temp[j].y == piece[playerTurn][jj].pinnedPath[k].y) {
-												piece[playerTurn][jj].moves.push({x : temp[j].x, y : temp[j].y});
-											}
-										}
-									}
-								}
-								temp = [];
-							}
-						} else {
-							piece[playerTurn][jj].moves = [];
-						}
+				//now analyzing board, finding moves of opposite player, player whose turn is now if it is not checkmated
+				for(let i = 1 ; i < piece[playerTurn].length ; i++) {
+					if(piece[playerTurn][i].alive) {
+						piece[playerTurn][i].findMovesBeforeMyTurn();
 					}
 				}
+				log("33");
 
 				piece[playerTurn][0].findMovesBeforeMyTurn();
 				
@@ -424,12 +404,16 @@ function analyzingAfterMyTurn() {
 	set isProtected property of friends
 	check if enemy king is put in check, set check path
 	check if enemy piece is pinned, set their pinned path
-00	*/
+	*/
+	log("51");
 	piece[playerTurn][0].findMovesAfterMyTurn();
+	
+	log("52");
+	for(let i = 1 ; i < piece[playerTurn].length ; i++) {
+		if(piece[playerTurn][i].alive) {
+			piece[playerTurn][i].findMovesAfterMyTurn();
 
-	for(let j = 1 ; j < piece[playerTurn].length ; i++) {
-		if(piece[playerTurn][j].alive) {
-			piece[playerTurn][j].findMovesAfterMyTurn();
+			log("53");
 		}
 	}
 }
@@ -479,15 +463,6 @@ function whichPieceAt(x,y) {
 			}
 		}
 	}
-	/*
-	pieces[pieces.length-2].forEach(p => {
-		//
-	});
-
-	pieces[pieces.length-1].forEach(p => {
-		//
-	});
-	*/
 	/*
 	piece.forEach(p => {
 		p.forEach(e => {
