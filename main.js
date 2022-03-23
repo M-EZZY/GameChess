@@ -38,8 +38,6 @@ let unit;
 //based on image width and height
 let imgUnit=60;
 
-let flip;
-
 let pieces = [];
 
 //setting position of chess board
@@ -78,10 +76,10 @@ canvas3.height = innerHeight;
 
 //creating pieces
 let wk = new King(1,1,unit*4,unit*7,1);
-let bk = new King(1,0,unit*3,0,1);
+let bk = new King(1,0,unit*4,0,1);
 
 let wq = new QueenRookBishop(0,1,unit*3,unit*7,1,1);
-let bq = new QueenRookBishop(0,0,unit*4,0,1,1);
+let bq = new QueenRookBishop(0,0,unit*3,0,1,1);
 
 let wr1 = new Rook2(2,1,0,unit*7,1,2);
 let wr2 = new Rook2(2,1,unit*7,unit*7,1,2);
@@ -144,29 +142,12 @@ for(let i=0;i<8;i++){
 
 
 //drawing the chess board
-for(let i=0;i<8;i++){
-	/*
-	if(i%2 == 0){
-		flip=0;
-	}
-	else{
-		flip=1;
-	}
-	*/
-	flip = i%2 == 0 ? 0 : 1;
+for(let i = 0 ; i < 8 ; i++) {
+	let flip = i % 2 == 0 ? 0 : 1;
+	for(let j = 0 ; j < 8 ; j++) {
+		ctx.fillStyle = (j % 2 == flip) ? lightColor : darkColor;
+		ctx.fillRect(unit * j, unit * i, unit * (j + 1), unit * (i + 1));
 	
-	for(let j=0;j<8;j++){
-		/*
-		if(j%2 == flip){
-			ctx.fillStyle="#cccccc";
-		}
-		else{
-			ctx.fillStyle="#333333";
-		}
-		*/
-		ctx.fillStyle = (j%2 == flip) ? lightColor : darkColor;
-		ctx.fillRect(unit*j,unit*i,unit*(j+1),unit*(i+1));
-
 		/*
 		ctx.strokeStyle="black";
 		ctx.moveTo(unit*j,unit*i);
@@ -178,9 +159,11 @@ for(let i=0;i<8;i++){
 }
 
 //drawing all pieces for the first time in their initial position
-p.onload = function(){
-	for(let i=0;i<pieces.length;i++){
-		pieces[i].draw();
+p.onload = function() {
+	for(let i = 0 ; i < pieces.length ; i++) {
+		for(let j = 0 ; j < piece[i].length ; j++) {
+			piece[i][j].draw();
+		}
 	}
 }
 
@@ -215,7 +198,15 @@ function clickedOnBoard(event) {
 
 			log("20");
 			if(isNewInMoves != 0) {
-				movingSelectedPiece();
+				if(selectedPiece == piece[playerTurn][2] || selectedPiece == piece[playerTurn][3]) {
+					selectedPiece.firstMove = 0;
+				}
+				if(selectedPiece == piece[playerTurn][0]) {
+					checkIfCastleIsToBeDone();
+					selectedPiece.firstMove = 0;
+				} else {
+					movingSelectedPiece();
+				}
 				log("30");
 				resettingPreviousThings();
 				log("31");
@@ -233,6 +224,7 @@ function clickedOnBoard(event) {
 				log("33");
 
 				piece[playerTurn][0].findMovesBeforeMyTurn();
+				piece[playerTurn][0].checkCastleMovePossible();
 				
 				//if king in check, draw red color square
 				if(piece[playerTurn][0].inCheck >= 1){
@@ -374,6 +366,54 @@ function movingSelectedPiece() {
 
 	selectOrMove = 1;
 }
+function checkIfCastleIsToBeDone() {
+	if(selectedPiece.castle.left.possible) {
+		if(square2[0] == selectedPiece.castle.left.kingx) {
+			if(square2[1] == selectedPiece.y) {
+				ctx2.clearRect(0, 0, canvas.width, canvas.height);
+
+				let color1 = whichColorSquare(square1[0], square1[1]);
+				fillColor(square1[0],square1[1], color1);
+
+				selectedPiece.update(square2[0], square2[1]);
+				selectedPiece.draw();
+
+				selectOrMove = 1;
+
+				let color2 = whichColorSquare(0, selectedPiece.y);
+				fillColor(0, selectedPiece.y, color2);
+
+				piece[playerTurn][2].update(selectedPiece.castle.left.rookx, selectedPiece.y);
+				piece[playerTurn][2].draw();
+
+				return;
+			}
+		}
+	} else if(selectedPiece.castle.right.possible) {
+		if(square2[0] == selectedPiece.castle.right.kingx) {
+			if(square2[1] == selectedPiece.y) {
+				ctx2.clearRect(0, 0, canvas.width, canvas.height);
+
+				let color1 = whichColorSquare(square1[0], square1[1]);
+				fillColor(square1[0],square1[1], color1);
+
+				selectedPiece.update(square2[0], square2[1]);
+				selectedPiece.draw();
+
+				selectOrMove = 1;
+
+				let color2 = whichColorSquare(unit * 7, selectedPiece.y);
+				fillColor(unit * 7, selectedPiece.y, color2);
+
+				piece[playerTurn][3].update(selectedPiece.castle.right.rookx, selectedPiece.y);
+				piece[playerTurn][3].draw();
+
+				return;
+			}
+		}
+	}
+	movingSelectedPiece();
+}
 function resettingPreviousThings() {
 	/*if player king was in check then remove red square*/
 	if(piece[playerTurn][0].inCheck >= 1) {
@@ -385,12 +425,14 @@ function resettingPreviousThings() {
 		}
 	}
 	/*resetting some properties of all pieces*/
-	for(let i = 0 ; i < piece.length ; i++) {
+	for(let i = 0 ; i < piece.length ; i++) { //piece.length always = 2 unless you are playing 4 player chess
 		for(let j = 0 ; j < piece[i].length ; j++) {
 			piece[i][j].moves = [];
 			if(j == 0) {
 				piece[i][j].inCheck = 0;
 				piece[i][j].checkPath = [];
+				piece[i][j].castle.left.possible = 0;
+				piece[i][j].castle.right.possible = 0;
 			} else {
 				piece[i][j].isPinned = 0;
 				piece[i][j].isProtected = 0;

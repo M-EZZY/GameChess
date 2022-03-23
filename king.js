@@ -7,7 +7,19 @@ class King extends SuperSuperClass {
 		//if inCheck == 1 then any line of fire piece or checking piece captured can get it out of check
 
 		this.firstMove = 1;
-		this.castlePossible = 0;
+		this.castlePossible = [0, 0];
+		this.castle = {
+			left : {
+				possible : 0,
+				kingx : unit * 2,
+				rookx : unit * 3,
+			},
+			right : {
+				possible : 0,
+				kingx : unit * 6,
+				rookx : unit * 5,
+			},
+		};
 	}
 	findMovesAfterMyTurn(){
 		let x;
@@ -119,89 +131,63 @@ class King extends SuperSuperClass {
 				yy = -1;
 			}
 
-			x = this.x + xx*unit;
-			y = this.y + yy*unit;
+			x = this.x + xx * unit;
+			y = this.y + yy * unit;
 			
-			if(checkBorderReached(x,y)){
+			if(checkBorderReached(x, y)) {
 				continue;
 			}
-			currentPiece = whichPieceAt(x,y);
-			if(currentPiece == 0){
-				//this.ifSquareOnFire(x,y);
-				for(let j=(!this.color)*16 ; j<(!this.color)*16 + 16 ; j++){
-					if(pieces[j].alive == 1){
-						if(pieces[j].moves.length != 0){
-							for(let k=0 ; k<pieces[j].moves.length ; k++){
-								if(x == pieces[j].moves[k].x && y == pieces[j].moves[k].y){
-									onFire++;
-								}
-							}
-						}
-					}
+			currentPiece = whichPieceAt(x, y);
+			if(currentPiece == 0) {
+				if(this.squareIsOnFire(x,y) == 0) {
+					log("69");
+					this.moves.push({x : x, y : y});
 				}
-				if(onFire == 0){
-					this.moves.push({x:x,y:y});
-				}
-				onFire = 0;
-			}
-			else if(currentPiece.color == this.color){
+			} else if(currentPiece.color == this.color) {
 				continue;
-			}
-			else if(currentPiece.color != this.color){
-				console.log("execution 1");
-				if(currentPiece.isProtected == 0){
+			} else if(currentPiece.color != this.color) {
+				log("70");
+				if(currentPiece.isProtected == 0) {
 					this.moves.push({x:x,y:y});
-					console.log("execution came here 2");
+					log("71");
 				}
 			}
 		}
+	}
+	checkCastleMovePossible() {
+		if(this.inCheck == 0) {
+			if(this.firstMove == 1) {
+				//first rook
+				if(piece[this.color][2].alive == 1) {
+					if(piece[this.color][2].firstMove == 1) {
+						let x = [this.x - unit, this.x - unit * 2, this.x - unit * 3];
 
-		/*
-		//castling moves
-		y = this.y;
-
-		if(this.inCheck == 0){
-			if(this.firstMove == 1){
-				for(let u=-1 ; u<2 ; u+2){
-
-					let r;
-					if(u == -1){
-						r = pieces[this.color*16 + 2];
-					}
-					else{
-						r = pieces[this.color*16 + 3];
-					}
-
-					if(r.firstMove == 1){
-						for(let v=1 ; v<=4; v++){
-							x = this.x + unit*u*v;
-
-							if(checkBorderReached(x,y) == 0){
-								currentPiece = whichPieceAt(x,y);
-								if(currentPiece == 0){
-									for(let j=(!this.color)*16 ; j<(!this.color)*16 + 16 ; j++){
-										if(pieces[j].alive == 1){
-											if(pieces[j].moves.length != 0){
-												for(let k=0 ; k<pieces[j].moves.length ; k++){
-													if(x == pieces[j].moves[k].x && y == pieces[j].moves[k].y){
-														onFire++;
-													}
-												}
-											}
+						if(whichPieceAt(x[0], this.y) == 0) {
+							if(whichPieceAt(x[1], this.y) == 0) {
+								if(whichPieceAt(x[2], this.y) == 0) {
+									if(this.squareIsOnFire(x[0], this.y) == 0) {
+										if(this.squareIsOnFire(x[1], this.y) == 0) {
+											this.castle.left.possible = 1;
+											this.moves.push({x : unit * 2, y : this.y});
 										}
 									}
-									if(onFire == 0){
-										continue;
-									}
-									else{
-										onFire = 0;
-										break;
-									}
 								}
-								else if(currentPiece == r){
-									this.castlePossible = u;
-									break;
+							}
+						}
+					}
+				}
+				//second rook
+				if(piece[this.color][3].alive == 1) {
+					if(piece[this.color][3].firstMove == 1) {
+						let x = [this.x + unit, this.x + unit * 2];
 
+						if(whichPieceAt(x[0], this.y) == 0) {
+							if(whichPieceAt(x[1], this.y) == 0) {
+								if(this.squareIsOnFire(x[0], this.y) == 0) {
+									if(this.squareIsOnFire(x[1], this.y) == 0) {
+										this.castle.right.possible = 1;
+										this.moves.push({x : unit * 6, y : this.y});
+									}
 								}
 							}
 						}
@@ -209,20 +195,22 @@ class King extends SuperSuperClass {
 				}
 			}
 		}
-		*/
 	}
-	
-	ifSquareOnFire(x,y){
-		for(let j=(!this.color)*16; j<(!this.color)*16 + 16; j++){
-			if(pieces[j].alive == 1){
-				if(pieces[j].moves.length != 0){
-					for(let k=0 ; k<pieces[j].moves.length ; k++){
-						if(x != pieces[j].moves[k].x || y != pieces[j].moves[k].y){
-							this.moves.push({x:x,y:y});
+	squareIsOnFire(x, y) {
+		let onFireBy = 0;
+		let oc = this.color ? 0 : 1;
+
+		for(let j = 0 ; j < piece[oc].length ; j++) {
+			if(piece[oc][j].alive == 1) {
+				if(piece[oc][j].moves.length != 0) {
+					for(let k = 0 ; k < piece[oc][j].moves.length ; k++) {
+						if(x == piece[oc][j].moves[k].x && y == piece[oc][j].moves[k].y) {
+							onFireBy++;
 						}
 					}
 				}
 			}
 		}
+		return onFireBy;
 	}
 }
