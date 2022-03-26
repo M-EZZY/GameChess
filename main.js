@@ -214,17 +214,6 @@ function clickedOnBoard(event) {
 				log("32");
 				//Now we change player turn, after previous things need to be done with same player turn
 				playerTurn = playerTurn ? 0 : 1;
-
-				//now analyzing board, finding moves of opposite player, player whose turn is now if it is not checkmated
-				for(let i = 1 ; i < piece[playerTurn].length ; i++) {
-					if(piece[playerTurn][i].alive) {
-						piece[playerTurn][i].findMovesBeforeMyTurn();
-					}
-				}
-				log("33");
-
-				piece[playerTurn][0].findMovesBeforeMyTurn();
-				piece[playerTurn][0].checkCastleMovePossible();
 				
 				//if king in check, draw red color square
 				if(piece[playerTurn][0].inCheck >= 1){
@@ -256,11 +245,34 @@ function clickedOnBoard(event) {
 					*/
 				}
 
+				let totalPossibleMoves = 0;
+
+				//now analyzing board, finding moves of opposite player, player whose turn is now if it is not checkmated
+				for(let i = 1 ; i < piece[playerTurn].length ; i++) {
+					if(piece[playerTurn][i].alive) {
+						piece[playerTurn][i].findMovesBeforeMyTurn();
+						totalPossibleMoves += piece[playerTurn][i].moves.length;
+					}
+				}
+				log("33");
+
+				piece[playerTurn][0].findMovesBeforeMyTurn();
+
+				if(piece[playerTurn][0].inCheck >= 1) {
+					if(totalPossibleMoves + piece[playerTurn][0].moves.length == 0) {
+						weHaveAWinner(!playerTurn);
+						return;
+					}
+				}
+
+				piece[playerTurn][0].checkCastleMovePossible();
+
 				/*first check for check path then pinned path
 				also these needs to be done in findMovesBeforeMyTurn()*/
 
-				//finding total possible moves by comparing pieces move with chech path of king
+				//finding total possible moves by comparing pieces move with check path of king
 				//let temp = []; already declared up
+				/*
 				let totalPossibleMoves = 0;
 
 				if(piece[playerTurn][0].inCheck == 1){
@@ -300,6 +312,7 @@ function clickedOnBoard(event) {
 						return;
 					}
 				}
+				*/
 				//is king in check
 				//can it get out of check?
 				//capture attacking piece

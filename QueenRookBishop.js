@@ -139,7 +139,7 @@ class QueenRookBishop extends SuperClass {
 			}
 		}
 	}
-	findMovesBeforeMyTurn() {
+	findAllMoves() {
 		let x;
 		let y;
 		let xx;
@@ -202,20 +202,68 @@ class QueenRookBishop extends SuperClass {
 				}
 			}
 		}
-		if(this.isPinned) {
-			let temp = [];
-			temp = this.moves;
-			this.moves = [];
-	
-			for(let i = 0 ; i < temp.length ; i++) {
-				for(let j = 0 ; j < this.pinnedPath.length ; j++) {
-					if(temp[i].x == this.pinnedPath[j].x) {
-						if(temp[i].y == this.pinnedPath[j].y) {
-							this.moves.push({x : temp[i].x, y : temp[i].y});
-						}
+	}
+	OnlyMovesThatDoesNotPutKingInCheck() {
+		let temp = [];
+		temp = this.moves;
+		this.moves = [];
+
+		for(let i = 0 ; i < temp.length ; i++) {
+			for(let j = 0 ; j < this.pinnedPath.length ; j++) {
+				if(temp[i].x == this.pinnedPath[j].x) {
+					if(temp[i].y == this.pinnedPath[j].y) {
+						this.moves.push({x : temp[i].x, y : temp[i].y});
 					}
 				}
 			}
 		}
+	}
+	OnlyMovesThatCanGetKingOutOfCheck() {
+		let temp = [];
+		temp = this.moves;
+		this.moves = [];
+
+		for(let j = 0 ; j < temp.length ; j++) {
+			for(let k = 0 ; k < piece[this.color][0].checkPath.length ; k++) {
+				if(temp[j].x == piece[this.color][0].checkPath[k].x) {
+					if(temp[j].y == piece[this.color][0].checkPath[k].y) {
+						this.moves.push({x : temp[j].x, y : temp[j].y});
+						//totalPossibleMoves++;
+					}
+				}
+			}
+		}
+	}
+	findMovesBeforeMyTurn() {
+		if(piece[this.color][0].inCheck == 0) {
+			this.findAllMoves();
+			if(this.isPinned) {
+				this.OnlyMovesThatDoesNotPutKingInCheck();
+			}
+		} else if(piece[this.color][0].inCheck == 1 && this.isPinned == 0) {
+			this.findAllMoves();
+			this.OnlyMovesThatCanGetKingOutOfCheck();
+		} else {
+			this.moves = [];
+		}
+		//this does not look good, upper one looks better, easily readable
+		/*
+		if(piece[this.color][0].inCheck == 0, 1) {
+			this.findAllMoves();
+
+			if(piece[this.color][0].inCheck == 0) {
+				if(this.isPinned) {
+					this.removeMovesThatPutsKingInCheck();
+				}
+			} else {
+				if(this.isPinned == 0) {
+					this.removeMovesThatCannotGetKingOutOfCheck();
+				} else {
+					this.moves = [];
+				}
+			}
+		} else {
+			this.moves = [];
+		}*/
 	}
 }
