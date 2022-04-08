@@ -60,6 +60,16 @@ class QueenRookBishop extends SuperClass {
 				x = this.x + xx * unit * j;
 				y = this.y + yy * unit * j;
 				
+				//to draw which squares are being calculated in possible moves
+				let a = [x, y];
+				setTimeout(() => {
+					log("2000");
+					ctx2.beginPath();
+					ctx2.fillStyle = "rgba(0, 0, 150, 0.5)";
+					ctx2.fillRect(a[0], a[1], a[0] + unit, a[1] + unit);
+				}, 1000 * ((i*8) + j), a);
+
+
 				if(checkBorderReached(x, y)) {
 					break;
 				}

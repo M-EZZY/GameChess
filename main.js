@@ -146,7 +146,9 @@ for(let i = 0 ; i < 8 ; i++) {
 	let flip = i % 2 == 0 ? 0 : 1;
 	for(let j = 0 ; j < 8 ; j++) {
 		ctx.fillStyle = (j % 2 == flip) ? lightColor : darkColor;
-		ctx.fillRect(unit * j, unit * i, unit * (j + 1), unit * (i + 1));
+		//ctx.fillRect(unit * j, unit * i, unit * (j + 1), unit * (i + 1));
+		//works like this, starting coordinates and the length and width of rectangle
+		ctx.fillRect(unit * j, unit * i, unit, unit);
 	
 		/*
 		ctx.strokeStyle="black";
@@ -155,6 +157,21 @@ for(let i = 0 ; i < 8 ; i++) {
 		ctx.lineWidth=unit;
 		ctx.stroke();
 		*/
+	}
+}
+
+//drawing the chess board in efficient way
+ctx.fillStyle = lightColor;
+ctx.fillRect(0, 0, unit * 8, unit * 8);
+
+ctx.fillStyle = darkColor;
+for(let i = 0 ; i < 8 ; i++) {
+	let flip = i % 2 == 0 ? 0 : 1;
+	for(let j = 0 ; j < 8 ; j++) {
+		if (j % 2 == flip) {
+			continue;
+		}
+		ctx.fillRect(unit * j, unit * i, unit, unit);
 	}
 }
 
@@ -184,6 +201,36 @@ let isNewInMoves;
 let redSquare = {};
 
 let numberOfPiecesCaptured = [0,0];
+
+//to draw light blue squares of possible moves
+//not working. fix it
+canvas2.addEventListener("mousemove",onMouseMove);
+function onMouseMove(event) {
+	if(selectedPiece) {
+		return;
+	}
+	
+	ctx2.clearRect(0, 0, unit * 8, unit * 8);
+
+	let ex = event.offsetX;
+	let ey = event.offsetY;
+
+	let square = whichSquare(ex, ey);
+	let x = square[0];
+	let y = square[1];
+
+	let ppp = whichPieceAt(x, y);
+	if(ppp != 0) {
+		if(ppp.moves.length != 0) {
+			ppp.moves.forEach(m => {
+				ctx2.beginPath();
+				ctx2.fillStyle = "rgba(0, 0, 250, 0.5)";
+				ctx2.fillRect(m.x, m.y, unit, unit);
+				ctx2.closePath();
+			});
+		}
+	}
+}
 
 canvas2.addEventListener("click",clickedOnBoard);
 
@@ -327,6 +374,8 @@ function clickedOnBoard(event) {
 		} else {
 			log("you deselected your selected piece");
 			ctx2.clearRect(0, 0, canvas.width, canvas.height);
+
+			selectedPiece = 0;
 			selectOrMove = 1;
 		}
 	}
@@ -377,9 +426,12 @@ function movingSelectedPiece() {
 	selectedPiece.update(square2[0], square2[1]);
 	selectedPiece.draw();
 
+	selectedPiece = 0;
 	selectOrMove = 1;
 }
 function checkIfCastleIsToBeDone() {
+	selectedPiece.firstMove = 0;
+
 	if(selectedPiece.castle.left.possible) {
 		if(square2[0] == selectedPiece.castle.left.kingx) {
 			if(square2[1] == selectedPiece.y) {
@@ -391,13 +443,14 @@ function checkIfCastleIsToBeDone() {
 				selectedPiece.update(square2[0], square2[1]);
 				selectedPiece.draw();
 
-				selectOrMove = 1;
-
 				let color2 = whichColorSquare(0, selectedPiece.y);
 				fillColor(0, selectedPiece.y, color2);
 
 				piece[playerTurn][2].update(selectedPiece.castle.left.rookx, selectedPiece.y);
 				piece[playerTurn][2].draw();
+
+				selectedPiece = 0;
+				selectOrMove = 1;
 
 				return;
 			}
@@ -413,13 +466,16 @@ function checkIfCastleIsToBeDone() {
 				selectedPiece.update(square2[0], square2[1]);
 				selectedPiece.draw();
 
-				selectOrMove = 1;
-
 				let color2 = whichColorSquare(unit * 7, selectedPiece.y);
 				fillColor(unit * 7, selectedPiece.y, color2);
 
 				piece[playerTurn][3].update(selectedPiece.castle.right.rookx, selectedPiece.y);
 				piece[playerTurn][3].draw();
+
+				selectedPiece.firstMove = 0;
+
+				selectedPiece = 0;
+				selectOrMove = 1;
 
 				return;
 			}
