@@ -1,8 +1,19 @@
-body{
-    margin:0;
-    overflow: hidden;
-    background-color: #207e40;
+* {
+  margin: 0;
+	padding: 0;
+  overflow: hidden;
+	box-sizing: border-box;
 }
+body {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+  background-color: #207e40;
+}
+canvas {
+	/* width: 100vw; */
+	/* height: 100vh; */
+}/*
 #canvas{
     position:absolute;
     z-index: 10;
@@ -10,7 +21,7 @@ body{
 #canvas2{
     position: absolute;
     z-index: 20;
-}/*
+}
 #canvas3{
     position: absolute;
     z-index: 1;
